@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Lead Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Lead Analytics Dashboard</h1>
+            <a href="/" class="dashboard-link">← Back to Form</a>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalLeads">0</div>
+                <div class="stat-label">Total Leads</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="emailsOpened">0</div>
+                <div class="stat-label">Emails Opened</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="openRate">0%</div>
+                <div class="stat-label">Open Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="linkClicks">0</div>
+                <div class="stat-label">Link Clicks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="clickRate">0%</div>
+                <div class="stat-label">Click Rate</div>
+            </div>
+        </div>
+
+        <!-- Category Distribution -->
+        <div class="section">
+            <h2>📂 Lead Categories</h2>
+            <div id="categoryList" class="category-list"></div>
+        </div>
+
+        <!-- Recent Leads -->
+        <div class="section">
+            <h2>🕐 Recent Leads</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Category</th>
+                            <th>Priority</th>
+                            <th>Opened</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentLeads"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadDashboard() {
+            try {
+                const response = await fetch('/api/dashboard');
+                const data = await response.json();
+
+                document.getElementById('totalLeads').textContent = data.totalLeads;
+                document.getElementById('emailsOpened').textContent = data.totalEmailsOpened;
+                document.getElementById('openRate').textContent = data.openRate + '%';
+                document.getElementById('linkClicks').textContent = data.totalLinkClicks;
+                document.getElementById('clickRate').textContent = data.clickRate + '%';
+
+                const categoryList = document.getElementById('categoryList');
+                categoryList.innerHTML = data.categoryData.map(cat => `
+                    <div class="category-item">
+                        <span class="category-name">${cat._id}</span>
+                        <span class="category-count">${cat.count} leads</span>
+                    </div>
+                `).join('');
+
+                const recentLeads = document.getElementById('recentLeads');
+                recentLeads.innerHTML = data.recentLeads.map(lead => `
+                    <tr>
+                        <td>${lead.fullName}</td>
+                        <td>${lead.email}</td>
+                        <td><span class="badge category-badge">${lead.category}</span></td>
+                        <td><span class="badge priority-${lead.priority.toLowerCase()}">${lead.priority}</span></td>
+                        <td>${lead.emailOpened ? '✅' : '❌'}</td>
+                        <td>${new Date(lead.submissionTime).toLocaleString()}</td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        loadDashboard();
+        setInterval(loadDashboard, 30000);
+    </script>
+</body>
+</html>

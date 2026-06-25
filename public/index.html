@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Lead Management System</h1>
+            <a href="/dashboard.html" class="dashboard-link">📊 Dashboard</a>
+        </div>
+        
+        <div class="form-card">
+            <h2>Tell us about your requirement</h2>
+            <p class="subtitle">We'll analyze your needs and get back to you within 24 hours</p>
+            
+            <form id="leadForm">
+                <div class="form-group">
+                    <label for="fullName">Full Name *</label>
+                    <input type="text" id="fullName" required placeholder="Enter your full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" required placeholder="your@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number *</label>
+                    <input type="tel" id="phone" required placeholder="+91 98765 43210">
+                </div>
+
+                <div class="form-group">
+                    <label for="companyName">Company Name <span class="optional">(optional)</span></label>
+                    <input type="text" id="companyName" placeholder="Your company name">
+                </div>
+
+                <div class="form-group">
+                    <label for="requirement">Your Requirement / Message *</label>
+                    <textarea id="requirement" required placeholder="Describe what you need..." rows="4"></textarea>
+                </div>
+
+                <button type="submit" id="submitBtn">Submit →</button>
+            </form>
+
+            <div id="successMessage" style="display: none;">
+                <div class="success-icon">✅</div>
+                <h2>Submitted Successfully!</h2>
+                <p>Check your email for confirmation.</p>
+                <div id="aiResult" class="ai-result"></div>
+                <a href="/dashboard.html" class="dashboard-link">View Dashboard →</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('leadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+
+            const formData = {
+                fullName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                companyName: document.getElementById('companyName').value,
+                requirement: document.getElementById('requirement').value
+            };
+
+            try {
+                const response = await fetch('/api/leads', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('leadForm').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                    
+                    document.getElementById('aiResult').innerHTML = `
+                        <h3>🧠 AI Analysis Result</h3>
+                        <p><strong>Category:</strong> ${data.category}</p>
+                        <p><strong>Priority:</strong> ${data.priority}</p>
+                    `;
+                }
+            } catch (error) {
+                alert('Error submitting form. Please try again.');
+                submitBtn.textContent = 'Submit →';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
