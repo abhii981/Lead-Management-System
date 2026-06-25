@@ -3,49 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Lead Management</title>
+    <title>Dashboard - LeadFlow</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <div class="header">
-            <h1>📊 Lead Analytics Dashboard</h1>
-            <a href="/" class="dashboard-link">← Back to Form</a>
+            <div class="logo">
+                <i class="fas fa-rocket"></i>
+                <span>LeadFlow</span>
+            </div>
+            <div class="header-actions">
+                <a href="/" class="dashboard-link">
+                    <i class="fas fa-arrow-left"></i> Back to Form
+                </a>
+                <button onclick="loadDashboard()" class="refresh-btn">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
         </div>
 
-        <!-- Stats Cards -->
+        <!-- Stats Grid -->
         <div class="stats-grid" id="statsGrid">
-            <div class="stat-card">
-                <div class="stat-number" id="totalLeads">0</div>
-                <div class="stat-label">Total Leads</div>
+            <div class="stat-card stat-total">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div>
+                    <div class="stat-number" id="totalLeads">0</div>
+                    <div class="stat-label">Total Leads</div>
+                </div>
+                <div class="stat-trend"><i class="fas fa-arrow-up"></i> 12%</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="emailsOpened">0</div>
-                <div class="stat-label">Emails Opened</div>
+            <div class="stat-card stat-opened">
+                <div class="stat-icon"><i class="fas fa-envelope-open"></i></div>
+                <div>
+                    <div class="stat-number" id="emailsOpened">0</div>
+                    <div class="stat-label">Emails Opened</div>
+                </div>
+                <div class="stat-trend"><i class="fas fa-arrow-up"></i> 8%</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="openRate">0%</div>
-                <div class="stat-label">Open Rate</div>
+            <div class="stat-card stat-rate">
+                <div class="stat-icon"><i class="fas fa-percentage"></i></div>
+                <div>
+                    <div class="stat-number" id="openRate">0%</div>
+                    <div class="stat-label">Open Rate</div>
+                </div>
+                <div class="stat-trend"><i class="fas fa-arrow-up"></i> 5%</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="linkClicks">0</div>
-                <div class="stat-label">Link Clicks</div>
+            <div class="stat-card stat-clicks">
+                <div class="stat-icon"><i class="fas fa-mouse-pointer"></i></div>
+                <div>
+                    <div class="stat-number" id="linkClicks">0</div>
+                    <div class="stat-label">Link Clicks</div>
+                </div>
+                <div class="stat-trend"><i class="fas fa-arrow-up"></i> 3%</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="clickRate">0%</div>
-                <div class="stat-label">Click Rate</div>
+            <div class="stat-card stat-click-rate">
+                <div class="stat-icon"><i class="fas fa-chart-simple"></i></div>
+                <div>
+                    <div class="stat-number" id="clickRate">0%</div>
+                    <div class="stat-label">Click Rate</div>
+                </div>
+                <div class="stat-trend"><i class="fas fa-arrow-down"></i> 2%</div>
             </div>
         </div>
 
         <!-- Category Distribution -->
         <div class="section">
-            <h2>📂 Lead Categories</h2>
+            <div class="section-header">
+                <h2><i class="fas fa-tags"></i> Lead Categories</h2>
+                <span class="section-badge">AI Classified</span>
+            </div>
             <div id="categoryList" class="category-list"></div>
         </div>
 
         <!-- Recent Leads -->
         <div class="section">
-            <h2>🕐 Recent Leads</h2>
+            <div class="section-header">
+                <h2><i class="fas fa-clock"></i> Recent Leads</h2>
+                <span class="section-badge">Live</span>
+            </div>
             <div class="table-container">
                 <table>
                     <thead>
@@ -54,11 +93,17 @@
                             <th>Email</th>
                             <th>Category</th>
                             <th>Priority</th>
-                            <th>Opened</th>
+                            <th>Status</th>
                             <th>Time</th>
                         </tr>
                     </thead>
-                    <tbody id="recentLeads"></tbody>
+                    <tbody id="recentLeads">
+                        <tr>
+                            <td colspan="6" class="loading-text">
+                                <i class="fas fa-spinner fa-spin"></i> Loading leads...
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -70,38 +115,84 @@
                 const response = await fetch('/api/dashboard');
                 const data = await response.json();
 
-                document.getElementById('totalLeads').textContent = data.totalLeads;
-                document.getElementById('emailsOpened').textContent = data.totalEmailsOpened;
+                // Update stats with animation
+                animateNumber('totalLeads', data.totalLeads);
+                animateNumber('emailsOpened', data.totalEmailsOpened);
                 document.getElementById('openRate').textContent = data.openRate + '%';
-                document.getElementById('linkClicks').textContent = data.totalLinkClicks;
+                animateNumber('linkClicks', data.totalLinkClicks);
                 document.getElementById('clickRate').textContent = data.clickRate + '%';
 
+                // Update categories
                 const categoryList = document.getElementById('categoryList');
-                categoryList.innerHTML = data.categoryData.map(cat => `
-                    <div class="category-item">
-                        <span class="category-name">${cat._id}</span>
-                        <span class="category-count">${cat.count} leads</span>
-                    </div>
-                `).join('');
+                if (data.categoryData.length === 0) {
+                    categoryList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No leads yet. Submit your first lead!</p>
+                        </div>
+                    `;
+                } else {
+                    categoryList.innerHTML = data.categoryData.map(cat => `
+                        <div class="category-item">
+                            <span class="category-name">
+                                <i class="fas fa-folder"></i> ${cat._id}
+                            </span>
+                            <span class="category-count">${cat.count} leads</span>
+                        </div>
+                    `).join('');
+                }
 
+                // Update recent leads
                 const recentLeads = document.getElementById('recentLeads');
-                recentLeads.innerHTML = data.recentLeads.map(lead => `
-                    <tr>
-                        <td>${lead.fullName}</td>
-                        <td>${lead.email}</td>
-                        <td><span class="badge category-badge">${lead.category}</span></td>
-                        <td><span class="badge priority-${lead.priority.toLowerCase()}">${lead.priority}</span></td>
-                        <td>${lead.emailOpened ? '✅' : '❌'}</td>
-                        <td>${new Date(lead.submissionTime).toLocaleString()}</td>
-                    </tr>
-                `).join('');
+                if (data.recentLeads.length === 0) {
+                    recentLeads.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>No leads yet. Submit your first lead!</p>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    recentLeads.innerHTML = data.recentLeads.map(lead => `
+                        <tr>
+                            <td><strong>${lead.fullName}</strong></td>
+                            <td>${lead.email}</td>
+                            <td><span class="badge category-badge">${lead.category}</span></td>
+                            <td><span class="badge priority-${lead.priority.toLowerCase()}">${lead.priority}</span></td>
+                            <td>
+                                ${lead.emailOpened ? 
+                                    '<span class="status-badge opened"><i class="fas fa-check-circle"></i> Opened</span>' : 
+                                    '<span class="status-badge pending"><i class="fas fa-clock"></i> Pending</span>'
+                                }
+                            </td>
+                            <td>${new Date(lead.submissionTime).toLocaleString()}</td>
+                        </tr>
+                    `).join('');
+                }
 
             } catch (error) {
                 console.error('Error loading dashboard:', error);
             }
         }
 
+        function animateNumber(elementId, target) {
+            const element = document.getElementById(elementId);
+            let current = 0;
+            const increment = target / 50;
+            const interval = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(interval);
+                }
+                element.textContent = Math.round(current);
+            }, 20);
+        }
+
+        // Load dashboard on page load
         loadDashboard();
+        // Refresh every 30 seconds
         setInterval(loadDashboard, 30000);
     </script>
 </body>
